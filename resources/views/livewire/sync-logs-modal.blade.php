@@ -59,6 +59,15 @@
                 </button>
                 
                 <button 
+                    wire:click="resetSyncDates" 
+                    wire:confirm="¿Resetear fechas de sincronización? La próxima sincronización descargará todos los datos nuevamente."
+                    class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+                >
+                    <span class="material-symbols-outlined text-sm">history</span>
+                    Reset Fechas
+                </button>
+                
+                <button 
                     wire:click="clearLogs" 
                     wire:confirm="¿Estás seguro de limpiar todos los logs?"
                     class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition-colors ml-auto"

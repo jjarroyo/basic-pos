@@ -98,6 +98,18 @@ class SyncLogsModal extends Component
         }
     }
     
+    public function resetSyncDates()
+    {
+        // Limpiar todas las fechas de sincronización del caché
+        $resources = ['users', 'products', 'categories', 'clients', 'cash_registers', 'sales', 'sessions'];
+        
+        foreach ($resources as $resource) {
+            cache()->forget("last_sync_{$resource}");
+        }
+        
+        $this->syncMessage = '✅ Fechas de sincronización reseteadas. La próxima sincronización descargará todos los datos.';
+    }
+    
     public function render()
     {
         return view('livewire.sync-logs-modal');
