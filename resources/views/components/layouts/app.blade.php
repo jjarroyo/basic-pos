@@ -85,6 +85,11 @@
             </button>
         </div>
 
+        {{-- Modal de Logs y Sincronización (solo en modo cliente) --}}
+        @if(config('pos.mode') === 'client')
+            @livewire('sync-logs-modal')
+        @endif
+
         @fluxScripts
     </body>
 </html>

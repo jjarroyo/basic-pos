@@ -1,12 +1,13 @@
-<div>
+<div 
+    x-data
+    @open-sync-logs.window="$wire.openSyncLogs()"
+    @manual-sync.window="$wire.manualSync()"
+>
     @if($showModal)
     <!-- Modal Overlay -->
     <div 
         class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
         wire:click="closeModal"
-        x-data
-        @open-sync-logs.window="$wire.openSyncLogs()"
-        @manual-sync.window="$wire.manualSync()"
     >
         <!-- Modal Content -->
         <div 
