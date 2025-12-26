@@ -106,48 +106,33 @@ class NetworkConfig extends Component
                 return;
             }
 
-            // Update .env file
-            $this->updateEnvFile([
-                'POS_MODE' => $this->mode,
-                'POS_SERVER_IP' => $this->serverIp ?? '',
-                'POS_SERVER_PORT' => $this->serverPort ?? 8000,
+            // Guardar en archivo de configuración externo (no .env)
+            $this->saveToConfigFile([
+                'mode' => $this->mode,
+                'server_ip' => $this->serverIp ?? '',
+                'server_port' => $this->serverPort ?? 8000,
             ]);
-
-            // Clear config cache
-            \Artisan::call('config:clear');
-
-            session()->flash('message', '✅ Configuración guardada exitosamente');
             
-            // Reload configuration
-            $this->mode = config('pos.mode', 'standalone');
+            session()->flash('message', '✅ Configuración guardada. Por favor, reinicia la aplicación para aplicar los cambios.');
             
-            $this->closeModal();
+            // NO cerramos el modal para que el usuario vea el mensaje
+            // $this->closeModal();
         } catch (\Exception $e) {
             session()->flash('error', 'Error: ' . $e->getMessage());
         }
     }
 
-    private function updateEnvFile($data)
+    private function saveToConfigFile($data)
     {
-        $envFile = base_path('.env');
-        $envContent = file_get_contents($envFile);
-
-        foreach ($data as $key => $value) {
-            // Check if key exists
-            if (preg_match("/^{$key}=.*/m", $envContent)) {
-                // Update existing key
-                $envContent = preg_replace(
-                    "/^{$key}=.*/m",
-                    "{$key}={$value}",
-                    $envContent
-                );
-            } else {
-                // Add new key
-                $envContent .= "\n{$key}={$value}";
-            }
+        // Guardar en storage/app/pos_config.json (fuera del .exe)
+        $configPath = storage_path('app/pos_config.json');
+        
+        // Asegurar que el directorio existe
+        if (!file_exists(dirname($configPath))) {
+            mkdir(dirname($configPath), 0755, true);
         }
-
-        file_put_contents($envFile, $envContent);
+        
+        file_put_contents($configPath, json_encode($data, JSON_PRETTY_PRINT));
     }
 
     private function getLocalIp()
