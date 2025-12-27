@@ -162,11 +162,28 @@
                     </div>
 
                     <button 
+                        wire:click="autoDiscoverServer" 
+                        class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                    >
+                        <span class="material-symbols-outlined">search</span>
+                        🔍 Buscar Servidor Automáticamente
+                    </button>
+
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-slate-300 dark:border-slate-600"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white dark:bg-[#1e293b] text-slate-500 dark:text-slate-400">o</span>
+                        </div>
+                    </div>
+
+                    <button 
                         wire:click="testConnection" 
                         class="w-full py-3 px-4 bg-slate-600 hover:bg-slate-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                     >
                         <span class="material-symbols-outlined">wifi_find</span>
-                        Probar Conexión
+                        Probar Conexión Manual
                     </button>
                 </div>
             @endif

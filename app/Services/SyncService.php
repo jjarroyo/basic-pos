@@ -315,6 +315,60 @@ class SyncService
     }
 
     /**
+     * Push a single sale immediately to server (for sellers)
+     */
+    public function pushSaleImmediately(Sale $sale): bool
+    {
+        try {
+            if (!$this->isServerOnline()) {
+                Log::warning('Server offline, sale will be synced later: #' . $sale->id);
+                return false;
+            }
+
+            // Load relationships if not already loaded
+            $sale->load('details');
+
+            $response = Http::timeout($this->timeout)->post($this->serverUrl . '/api/sync/sale', [
+                'id' => $sale->id,
+                'client_id' => $sale->client_id,
+                'user_id' => $sale->user_id,
+                'cash_register_id' => $sale->cash_register_id,
+                'subtotal' => $sale->subtotal,
+                'discount_type' => $sale->discount_type ?? null,
+                'discount_value' => $sale->discount_value ?? 0,
+                'discount_amount' => $sale->discount_amount ?? 0,
+                'tax' => $sale->tax ?? 0,
+                'total' => $sale->total,
+                'payment_method' => $sale->payment_method,
+                'cash_received' => $sale->cash_received ?? null,
+                'change' => $sale->change ?? null,
+                'status' => $sale->status ?? 'completed',
+                'items' => $sale->details->map(function($item) {
+                    return [
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                        'total' => $item->total,
+                    ];
+                })->toArray(),
+            ]);
+
+            if ($response->successful()) {
+                $sale->update(['synced_at' => now()]);
+                Log::info('✅ Sale #' . $sale->id . ' pushed immediately to server');
+                return true;
+            } else {
+                Log::error('❌ Failed to push sale #' . $sale->id . ': ' . $response->body());
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('❌ Error pushing sale immediately #' . $sale->id . ': ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Push cash register sessions to server
      */
     public function pushSessions(): bool
@@ -392,9 +446,14 @@ class SyncService
         $results['products'] = $this->pullProducts();
         $results['clients'] = $this->pullClients();
         $results['cash_registers'] = $this->pullCashRegisters();
+        
         // Push data to server
         $results['sales'] = $this->pushSales();
         $results['sessions'] = $this->pushSessions();
+
+        // Note: Sellers don't pull sales from server, they only push their own sales
+        // This is handled by the SaleObserver which auto-pushes when a seller creates a sale
+        Log::info('Sync completed. User role: ' . (auth()->check() ? auth()->user()->getRoleNames()->first() : 'guest'));
 
         return $results;
     }

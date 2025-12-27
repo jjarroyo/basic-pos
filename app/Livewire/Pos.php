@@ -135,7 +135,15 @@ class Pos extends Component
                     'total' => $qty * $product->selling_price,
                 ]);
 
+                // Decrement stock
                 $product->decrement('stock', $qty);
+                
+                // Broadcast stock update to all clients in real-time
+                event(new \App\Events\ProductStockUpdated(
+                    $product->id,
+                    $product->fresh()->stock,
+                    auth()->user()->name
+                ));
             }
         });
 

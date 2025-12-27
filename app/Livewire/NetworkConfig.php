@@ -97,6 +97,30 @@ class NetworkConfig extends Component
         }
     }
 
+    public function autoDiscoverServer()
+    {
+        try {
+            session()->flash('message', '🔍 Buscando servidor en la red...');
+            $this->dispatch('$refresh');
+
+            $discoveryService = new \App\Services\ServerDiscoveryService();
+            $serverInfo = $discoveryService->quickDiscover(5);
+
+            if ($serverInfo) {
+                $this->serverIp = $serverInfo['ip'];
+                $this->serverPort = $serverInfo['port'];
+                $this->connectionStatus = 'success';
+                session()->flash('message', "✅ Servidor encontrado en {$serverInfo['ip']}:{$serverInfo['port']}");
+            } else {
+                $this->connectionStatus = 'error';
+                session()->flash('error', '❌ No se encontró ningún servidor en la red. Asegúrate de que el servidor esté corriendo.');
+            }
+        } catch (\Exception $e) {
+            $this->connectionStatus = 'error';
+            session()->flash('error', '❌ Error: ' . $e->getMessage());
+        }
+    }
+
     public function saveConfig()
     {
         try {
