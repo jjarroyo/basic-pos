@@ -105,19 +105,21 @@ class SyncController extends Controller
             $sale = Sale::updateOrCreate(
                 ['id' => $saleData['id'] ?? null],
                 [
-                    'client_id' => $saleData['client_id'],
                     'user_id' => $saleData['user_id'],
                     'cash_register_id' => $saleData['cash_register_id'],
+                    'client_id' => $saleData['client_id'],
                     'subtotal' => $saleData['subtotal'],
-                    'discount' => $saleData['discount'] ?? 0,
                     'tax' => $saleData['tax'] ?? 0,
                     'total' => $saleData['total'],
                     'payment_method' => $saleData['payment_method'],
+                    'cash_received' => $saleData['cash_received'] ?? null,
+                    'change' => $saleData['change'] ?? null,
+                    'status' => $saleData['status'] ?? 'completed',
                     'synced_at' => now(),
                 ]
             );
 
-            // Create sale items
+            // Create sale details
             if (isset($saleData['items'])) {
                 foreach ($saleData['items'] as $item) {
                     SaleDetail::updateOrCreate(
@@ -128,7 +130,7 @@ class SyncController extends Controller
                         [
                             'quantity' => $item['quantity'],
                             'price' => $item['price'],
-                            'subtotal' => $item['subtotal'],
+                            'total' => $item['total'] ?? ($item['quantity'] * $item['price']),
                         ]
                     );
                 }

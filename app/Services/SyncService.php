@@ -127,6 +127,12 @@ class SyncService
             
             foreach ($data['data'] as $productData) {
                 try {
+                    // Validar campos obligatorios
+                    if (empty($productData['id']) || empty($productData['name'])) {
+                        Log::warning('⚠️ [SYNC] Producto sin ID o nombre, saltando: ' . json_encode($productData));
+                        continue;
+                    }
+                    
                     Product::updateOrCreate(
                         ['id' => $productData['id']],
                         [
@@ -134,20 +140,21 @@ class SyncService
                             'name' => $productData['name'],
                             'barcode' => $productData['barcode'] ?? null,
                             'category_id' => $productData['category_id'] ?? null,
-                            'price' => $productData['price'],
-                            'cost' => $productData['cost'] ?? 0,
+                            'selling_price' => $productData['selling_price'] ?? 0,
+                            'cost_price' => $productData['cost_price'] ?? 0,
                             'stock' => $productData['stock'] ?? 0,
                             'min_stock' => $productData['min_stock'] ?? 0,
                             'description' => $productData['description'] ?? null,
                             'image' => $productData['image'] ?? null,
                             'is_active' => $productData['is_active'] ?? true,
-                            'synced_at' => now(),
                         ]
                     );
                     $synced++;
+                    Log::info('✅ [SYNC] Producto sincronizado: ID ' . $productData['id'] . ' - ' . $productData['name']);
                 } catch (\Exception $e) {
                     $errors++;
-                    Log::error('❌ [SYNC] Error al sincronizar producto ID ' . $productData['id'] . ': ' . $e->getMessage());
+                    Log::error('❌ [SYNC] Error al sincronizar producto ID ' . ($productData['id'] ?? 'unknown') . ': ' . $e->getMessage());
+                    Log::error('📍 [SYNC] Datos del producto: ' . json_encode($productData));
                 }
             }
 
@@ -188,12 +195,12 @@ class SyncService
                     [
                         'id' => $clientData['id'], // Forzar ID del servidor
                         'name' => $clientData['name'],
+                        'identification' => $clientData['identification'] ?? null,
+                        'document_type' => $clientData['document_type'] ?? null,
                         'email' => $clientData['email'] ?? null,
                         'phone' => $clientData['phone'] ?? null,
                         'address' => $clientData['address'] ?? null,
-                        'city' => $clientData['city'] ?? null,
-                        'nit' => $clientData['nit'] ?? null,
-                        'synced_at' => now(),
+                        'is_active' => $clientData['is_active'] ?? true,
                     ]
                 );
             }
