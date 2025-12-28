@@ -4,38 +4,39 @@ namespace App\Livewire;
 
 use App\Models\CashRegister;
 use Livewire\Component;
+use Livewire\Attributes\On;
 
 class CashRegisters extends Component
 {
-    public $registers;
-    public $showModal = false;
-    public $isEditing = false;
-    public $editingId = null;
+    public $register; // Single cash register
+    public $showEditModal = false;
     public $name = '';
 
     public function mount()
     {
-        $this->loadRegisters();
+        $this->loadRegister();
     }
 
-    public function loadRegisters()
+    #[On('cash-register-updated')]
+    public function loadRegister()
     {
-        $this->registers = CashRegister::with('currentSession.user')->get();
+        // Load the single cash register (first one)
+        $this->register = CashRegister::with('currentSession.user')->first();
+        
+        // If no register exists, create a default one
+        if (!$this->register) {
+            $this->register = CashRegister::create([
+                'name' => 'Caja Principal',
+                'is_active' => true,
+                'is_open' => false,
+            ]);
+        }
     }
 
-    public function create()
+    public function edit()
     {
-        $this->reset(['name', 'isEditing', 'editingId']);
-        $this->showModal = true;
-    }
-
-    public function edit($id)
-    {
-        $register = CashRegister::findOrFail($id);
-        $this->editingId = $id;
-        $this->name = $register->name;
-        $this->isEditing = true;
-        $this->showModal = true;
+        $this->name = $this->register->name;
+        $this->showEditModal = true;
     }
 
     public function save()
@@ -44,34 +45,17 @@ class CashRegisters extends Component
             'name' => 'required|string|max:255',
         ]);
 
-        if ($this->isEditing) {
-            $register = CashRegister::findOrFail($this->editingId);
-            $register->update(['name' => $this->name]);
-        } else {
-            CashRegister::create([
-                'name' => $this->name,
-                'is_active' => true,
-                'is_open' => false,
-            ]);
-        }
+        $this->register->update(['name' => $this->name]);
 
-        $this->showModal = false;
-        $this->loadRegisters();
-        $this->reset(['name', 'isEditing', 'editingId']);
+        $this->showEditModal = false;
+        $this->loadRegister();
+        session()->flash('message', 'Caja actualizada exitosamente');
     }
 
-    public function delete($id)
+    public function closeModal()
     {
-        $register = CashRegister::findOrFail($id);
-        
-        // Check if register has an open session
-        if ($register->is_open) {
-            session()->flash('error', 'No se puede eliminar una caja con sesión abierta.');
-            return;
-        }
-
-        $register->delete();
-        $this->loadRegisters();
+        $this->showEditModal = false;
+        $this->reset('name');
     }
 
     public function render()

@@ -141,8 +141,18 @@
             }
             </script>
 
-            <!-- Cash Register Card -->
-            <livewire:cash-register-card />
+            <!-- Cash Register Module Card -->
+            <a href="{{ route('cash.index') }}" class="group flex flex-col p-6 bg-white dark:bg-[#1A2633] rounded-2xl border border-transparent hover:border-blue-500/30 shadow-sm hover:shadow-lg transition-all duration-300">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="size-12 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-2xl">point_of_sale</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">Caja Registradora</h3>
+                    <p class="text-sm text-slate-500 dark:text-gray-400">Gestión y sesiones.</p>
+                </div>
+            </a>
 
 
             <a href="{{ route('products') }}" class="group flex flex-col p-6 bg-white dark:bg-[#1A2633] rounded-2xl border border-transparent hover:border-blue-500/30 shadow-sm hover:shadow-lg transition-all duration-300">
@@ -192,6 +202,30 @@
                 </div>
             </a>
 
+            <a href="{{ route('returns.index') }}" class="group flex flex-col p-6 bg-white dark:bg-[#1A2633] rounded-2xl border border-transparent hover:border-blue-500/30 shadow-sm hover:shadow-lg transition-all duration-300">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="size-12 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-2xl">assignment_return</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">Devoluciones</h3>
+                    <p class="text-sm text-slate-500 dark:text-gray-400">Gestión de retornos.</p>
+                </div>
+            </a>
+
+            <a href="{{ route('expenses.index') }}" class="group flex flex-col p-6 bg-white dark:bg-[#1A2633] rounded-2xl border border-transparent hover:border-blue-500/30 shadow-sm hover:shadow-lg transition-all duration-300">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="size-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-2xl">payments</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">Gastos</h3>
+                    <p class="text-sm text-slate-500 dark:text-gray-400">Control de egresos.</p>
+                </div>
+            </a>
+
             <a href="{{ route('reports') }}" class="group flex flex-col p-6 bg-white dark:bg-[#1A2633] rounded-2xl border border-transparent hover:border-blue-500/30 shadow-sm hover:shadow-lg transition-all duration-300">
                 <div class="flex items-start justify-between mb-4">
                     <div class="size-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -204,7 +238,7 @@
                 </div>
             </a>
 
-            <a href="{{ route('config') }}" class="group flex flex-col p-6 bg-white dark:bg-[#1A2633] rounded-2xl border border-transparent hover:border-blue-500/30 shadow-sm hover:shadow-lg transition-all duration-300">
+            <a href="{{ route('config') }}\" class="group flex flex-col p-6 bg-white dark:bg-[#1A2633] rounded-2xl border border-transparent hover:border-blue-500/30 shadow-sm hover:shadow-lg transition-all duration-300">
                 <div class="flex items-start justify-between mb-4">
                     <div class="size-12 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:rotate-45">
                         <span class="material-symbols-outlined text-2xl">settings</span>

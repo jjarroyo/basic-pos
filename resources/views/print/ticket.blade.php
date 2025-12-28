@@ -44,7 +44,7 @@
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body onload="window.print();"> <div class="text-center mb-2">
+<body> <div class="text-center mb-2">
         <h2 class="text-lg font-bold uppercase">{{ $company['name'] }}</h2>
         <p>NIT: {{ $company['nit'] }}</p>
         <p>{{ $company['address'] }}</p>
@@ -139,7 +139,54 @@
     </div>
 
     <script>
-        // Cerrar la ventana automáticamente después de imprimir (opcional)
+        @if($openDrawer && $drawerCommand)
+        // function to open cash drawer
+        function openCashDrawer() {
+            try {
+                // convert the command string to actual bytes
+                const command = {!! json_encode($drawerCommand) !!};
+                
+                // create a hidden iframe to send the command
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                
+                // write the ESC/POS command to the iframe
+                const doc = iframe.contentWindow.document;
+                doc.open();
+                doc.write('<pre>' + command + '</pre>');
+                doc.close();
+                
+                // print the command (this sends it to the printer)
+                iframe.contentWindow.print();
+                
+                // remove the iframe after a short delay
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 100);
+                
+                console.log('Cash drawer command sent:', command);
+            } catch (error) {
+                console.error('Error opening cash drawer:', error);
+            }
+        }
+        
+        // open drawer before printing the ticket
+        window.addEventListener('load', function() {
+            openCashDrawer();
+            // small delay before printing ticket to ensure drawer command is sent first
+            setTimeout(() => {
+                window.print();
+            }, 200);
+        });
+        @else
+        // just print normally if drawer is not enabled
+        window.addEventListener('load', function() {
+            window.print();
+        });
+        @endif
+        
+        // close window after printing (optional)
         window.onafterprint = function() {
             // window.close();
         };

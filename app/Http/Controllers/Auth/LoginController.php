@@ -50,38 +50,7 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        // Sincronizar datos si estamos en modo cliente
-        if (config('pos.mode') === 'client') {
-            $this->syncClientData();
-        }
-
         return redirect()->intended(route('dashboard'));
-    }
-
-    /**
-     * Sincronizar datos del servidor después del login
-     */
-    protected function syncClientData(): void
-    {
-        try {
-            $syncService = app(\App\Services\SyncService::class);
-            
-            // Sincronizar datos básicos necesarios para operar
-            $syncService->pullUsers();
-            $syncService->pullCategories();
-            $syncService->pullProducts();
-            $syncService->pullClients();
-            $syncService->pullCashRegisters();
-            
-            // La última sincronización se guarda automáticamente en cada método pull
-            
-            // Mensaje de éxito para el usuario
-            session()->flash('sync_success', 'Datos sincronizados con el servidor exitosamente');
-            
-        } catch (\Exception $e) {
-            // Log error pero no bloquear el login
-            Log::warning('Failed to sync data after login: ' . $e->getMessage());
-        }
     }
 
     /**

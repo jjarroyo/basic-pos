@@ -167,6 +167,37 @@
                         <p class="text-xs text-slate-500 mt-1">Este mensaje aparecerá al final de cada impresión.</p>
                     </div>
                 </div>
+
+                <div class="bg-white dark:bg-[#1e293b] rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-700 pb-2">Cajón de Dinero</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-1">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input wire:model="enable_cash_drawer" type="checkbox" class="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                                    <div>
+                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Abrir cajón automáticamente en ventas en efectivo</span>
+                                        <p class="text-xs text-slate-500 mt-1">Cuando está habilitado, el cajón se abrirá automáticamente al confirmar una venta en efectivo.</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Comando ESC/POS del Cajón</label>
+                            <input wire:model="cash_drawer_command" type="text" class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#0f172a] px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none dark:text-white font-mono text-sm">
+                            <p class="text-xs text-slate-500 mt-1">Comando estándar: \x1B\x70\x00\x19\xFA (ESC p 0 25 250). Solo modifica si tu impresora requiere un comando diferente.</p>
+                        </div>
+
+                        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <p class="text-sm text-blue-700 dark:text-blue-400 flex items-start gap-2">
+                                <span class="material-symbols-outlined text-lg mt-0.5">info</span>
+                                <span>El comando se enviará a la impresora térmica cuando se imprima el ticket de una venta en efectivo. Asegúrate de que tu impresora tenga un cajón de dinero conectado.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div x-show="activeTab === 'backup'" class="space-y-6 animate-fade-in" style="display: none;">

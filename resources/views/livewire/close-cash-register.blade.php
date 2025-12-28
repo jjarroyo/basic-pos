@@ -89,6 +89,13 @@
                         <p class="text-xl font-bold text-green-600 dark:text-green-400">${{ number_format($cashSales, 2) }}</p>
                     </div>
 
+                    @if($expensesCash > 0)
+                    <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                        <p class="text-sm text-red-700 dark:text-red-400 mb-1">- Gastos en Efectivo</p>
+                        <p class="text-xl font-bold text-red-600 dark:text-red-400">${{ number_format($expensesCash, 2) }}</p>
+                    </div>
+                    @endif
+
                     <div class="h-px bg-slate-200 dark:bg-slate-700"></div>
 
                     <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
@@ -128,7 +135,80 @@
             </div>
         </div>
 
-        <!-- Notas de Cierre -->
+        {{-- Expenses Section --}}
+        @if($totalExpenses > 0)
+        <div class="mt-6 bg-white dark:bg-[#1e293b] rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-red-600">payments</span>
+                Resumen de Gastos
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                    <p class="text-sm text-red-700 dark:text-red-400 mb-1">Gastos en Efectivo</p>
+                    <p class="text-xl font-bold text-red-600 dark:text-red-400">${{ number_format($expensesCash, 0, ',', '.') }}</p>
+                </div>
+
+                <div class="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
+                    <p class="text-sm text-orange-700 dark:text-orange-400 mb-1">Otros Métodos</p>
+                    <p class="text-xl font-bold text-orange-600 dark:text-orange-400">${{ number_format($expensesOther, 0, ',', '.') }}</p>
+                </div>
+
+                <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-1 font-bold">Total Gastos</p>
+                    <p class="text-2xl font-extrabold text-slate-900 dark:text-white">${{ number_format($totalExpenses, 0, ',', '.') }}</p>
+                </div>
+            </div>
+
+            @if(count($expensesByCategory) > 0)
+            <div class="mt-4">
+                <p class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Desglose por Categoría</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    @foreach($expensesByCategory as $expense)
+                    <div class="p-2 bg-slate-50 dark:bg-slate-800 rounded text-sm">
+                        <div class="text-slate-600 dark:text-slate-400">{{ $expense['name'] }}</div>
+                        <div class="font-bold text-slate-900 dark:text-white">${{ number_format($expense['total'], 0, ',', '.') }}</div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+        </div>
+        @endif
+
+        {{-- Profitability Section --}}
+        <div class="mt-6 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined">trending_up</span>
+                Rentabilidad del Día
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 bg-white/10 backdrop-blur-sm rounded-xl">
+                    <p class="text-sm text-blue-100 mb-1">Ingresos</p>
+                    <p class="text-2xl font-bold">${{ number_format($totalSales, 0, ',', '.') }}</p>
+                </div>
+
+                <div class="p-4 bg-white/10 backdrop-blur-sm rounded-xl">
+                    <p class="text-sm text-blue-100 mb-1">Gastos</p>
+                    <p class="text-2xl font-bold">${{ number_format($totalExpenses, 0, ',', '.') }}</p>
+                </div>
+
+                <div class="p-4 bg-white/20 backdrop-blur-sm rounded-xl border-2 border-white/30">
+                    <p class="text-sm text-blue-100 mb-1 font-bold">Utilidad Neta</p>
+                    <p class="text-3xl font-extrabold {{ $netProfit >= 0 ? 'text-green-300' : 'text-red-300' }}">
+                        ${{ number_format($netProfit, 0, ',', '.') }}
+                    </p>
+                    @if($totalSales > 0)
+                    <p class="text-xs text-blue-100 mt-1">
+                        Margen: {{ number_format(($netProfit / $totalSales) * 100, 1) }}%
+                    </p>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- Notas de Cierre --}}
         <div class="mt-6 bg-white dark:bg-[#1e293b] rounded-2xl shadow-lg p-6">
             <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                 Notas de Cierre (Opcional)

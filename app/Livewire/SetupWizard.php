@@ -29,7 +29,7 @@ class SetupWizard extends Component
     public $seller_count = 0;
 
     // Step 3: Cash Register Creation
-    public $register_count = 1;
+    public $cash_register_name = 'Caja Principal';
 
     // Step 4: System Configuration
     public $tax_rate = 19;
@@ -57,7 +57,7 @@ class SetupWizard extends Component
             ];
         } elseif ($this->currentStep === 3) {
             $rules = [
-                'register_count' => 'required|integer|min:1|max:10',
+                'cash_register_name' => 'required|string|max:255',
             ];
         } elseif ($this->currentStep === 4) {
             $rules = [
@@ -111,8 +111,8 @@ class SetupWizard extends Component
         // Create seller users
         $this->createSellers();
 
-        // Create cash registers
-        $this->createCashRegisters();
+        // Create cash register
+        $this->createCashRegister();
 
         // Mark setup as completed
         Setting::set('setup_completed', true);
@@ -140,17 +140,14 @@ class SetupWizard extends Component
         }
     }
 
-    private function createCashRegisters()
+    private function createCashRegister()
     {
-        if ($this->register_count > 0) {
-            for ($i = 1; $i <= $this->register_count; $i++) {
-                \App\Models\CashRegister::create([
-                    'name' => "Caja $i",
-                    'is_active' => true,
-                    'is_open' => false,
-                ]);
-            }
-        }
+        // Create only one cash register
+        \App\Models\CashRegister::create([
+            'name' => $this->cash_register_name,
+            'is_active' => true,
+            'is_open' => false,
+        ]);
     }
 
     public function render()

@@ -12,11 +12,11 @@ use App\Livewire\OpenCashRegister;
 use App\Livewire\Pos;
 use App\Livewire\Products;
 use App\Livewire\Reports;
+use App\Livewire\Returns;
 use App\Livewire\SessionDetail;
 use App\Livewire\SessionHistory;
 use App\Livewire\Settings;
 use App\Livewire\SetupWizard;
-use App\Livewire\SyncLogs;
 use App\Livewire\UserManagement;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -64,7 +64,7 @@ Route::middleware(['auth', 'setup.completed', 'redirect.sellers'])->group(functi
     Route::get('/pos', Pos::class)->name('pos');
     Route::get('/cash-registers', CashRegisters::class)->name('cash.index');  
     Route::get('/open-register', OpenCashRegister::class)->name('cash.open');
-    Route::get('/close-register', CloseCashRegister::class)->name('cash.close');
+    Route::get('/close-register/{sessionId?}', CloseCashRegister::class)->name('cash.close');
     Route::get('/session/{sessionId}', ActiveSession::class)->name('session.active');
     Route::get('/sessions/history', SessionHistory::class)->name('sessions.history');
     Route::get('/sessions/{sessionId}', SessionDetail::class)->name('sessions.detail');
@@ -73,8 +73,10 @@ Route::middleware(['auth', 'setup.completed', 'redirect.sellers'])->group(functi
     Route::get('/reports', Reports::class)->name('reports');
     Route::get('/config', Settings::class)->name('config');
     Route::get('/users', UserManagement::class)->name('users.manage');
-    Route::get('/sync-logs', SyncLogs::class)->name('sync.logs');
+    Route::get('/returns', Returns::class)->name('returns.index');
+    Route::get('/expenses', \App\Livewire\Expenses::class)->name('expenses.index');
     Route::get('/print/ticket/{sale}', [PrinterController::class, 'ticket'])->name('print.ticket');
+    Route::get('/print/return/{return}', [PrinterController::class, 'returnReceipt'])->name('print.return');
  
     Route::get('/php-info', function () {
         // Lista de extensiones que configuramos en el script PowerShell

@@ -4,12 +4,14 @@ namespace App\Livewire;
 
 use App\Models\CashRegisterSession;
 use App\Models\Sale;
+use App\Models\Expense;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 
 class CloseCashRegister extends Component
 {
     public $session;
+    public $sessionId = null; // Optional session ID for admin closing other users' sessions
     public $expectedCash = 0;
     public $expectedCard = 0;
     public $actualCash = '';
@@ -21,13 +23,32 @@ class CloseCashRegister extends Component
     public $cardSales = 0;
     public $salesCount = 0;
 
-    public function mount()
+    // Expenses
+    public $totalExpenses = 0;
+    public $expensesCash = 0;
+    public $expensesOther = 0;
+    public $expensesByCategory = [];
+    
+    // Profitability
+    public $netProfit = 0;
+
+    public function mount($sessionId = null)
     {
-        // Obtener la sesión abierta del usuario con la relación cashRegister
-        $this->session = CashRegisterSession::with('cashRegister')
-            ->where('user_id', auth()->id())
-            ->where('status', 'open')
-            ->first();
+        $this->sessionId = $sessionId;
+        
+        // If sessionId is provided, load that specific session (for admins)
+        // Otherwise, load the current user's open session
+        if ($this->sessionId) {
+            $this->session = CashRegisterSession::with('cashRegister')
+                ->where('id', $this->sessionId)
+                ->where('status', 'open')
+                ->first();
+        } else {
+            $this->session = CashRegisterSession::with('cashRegister')
+                ->where('user_id', auth()->id())
+                ->where('status', 'open')
+                ->first();
+        }
 
         if (!$this->session) {
             session()->flash('error', 'No hay una caja abierta para cerrar.');
@@ -43,7 +64,38 @@ class CloseCashRegister extends Component
         $this->cashSales = $sales->where('payment_method', 'cash')->sum('total');
         $this->cardSales = $sales->where('payment_method', 'card')->sum('total');
  
-        $this->expectedCash = ($this->session->starting_cash ?? 0) + $this->cashSales;
+        // Get expenses for this session
+        $expenses = Expense::where('cash_register_session_id', $this->session->id)->get();
+        
+        $this->totalExpenses = $expenses->sum('amount');
+        $this->expensesCash = $expenses->where('payment_method', 'cash')->sum('amount');
+        $this->expensesOther = $expenses->whereIn('payment_method', ['card', 'transfer'])->sum('amount');
+        
+        // Expenses by category
+        $categories = [
+            'damaged_products' => 'Productos Dañados',
+            'services' => 'Servicios',
+            'supplies' => 'Suministros',
+            'salaries' => 'Nómina',
+            'rent' => 'Alquiler',
+            'other' => 'Otros',
+        ];
+        
+        $this->expensesByCategory = $expenses->groupBy('category')
+            ->map(function ($items, $key) use ($categories) {
+                return [
+                    'name' => $categories[$key] ?? $key,
+                    'total' => $items->sum('amount'),
+                ];
+            })
+            ->values()
+            ->toArray();
+        
+        // Calculate profitability
+        $this->netProfit = $this->totalSales - $this->totalExpenses;
+ 
+        // Expected cash should consider expenses in cash
+        $this->expectedCash = ($this->session->starting_cash ?? 0) + $this->cashSales - $this->expensesCash;
         
         $this->expectedCard = $this->cardSales;
     }
@@ -95,6 +147,9 @@ class CloseCashRegister extends Component
         $this->session->cashRegister->update([
             'is_open' => false,
         ]);
+
+        // Dispatch event to notify other components to refresh
+        $this->dispatch('cash-register-updated');
 
         session()->flash('message', '¡Caja cerrada exitosamente!');
         return redirect()->route('dashboard');

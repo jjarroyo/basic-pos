@@ -35,6 +35,9 @@ class OpenCashRegister extends Component
         $register->update(['is_open' => true]); 
         session(['cash_register_session_id' => $this->selectedRegisterId]);
 
+        // Dispatch event to notify other components to refresh
+        $this->dispatch('cash-register-updated');
+
         return redirect()->route('pos');
     }
 

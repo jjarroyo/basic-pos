@@ -26,6 +26,8 @@ class Settings extends Component
     public $logo;
     public $current_logo;
     public $backupFile;
+    public $enable_cash_drawer;
+    public $cash_drawer_command;
 
     public function mount()
     {
@@ -40,6 +42,8 @@ class Settings extends Component
         $this->tax_rate = Setting::get('tax_rate', 19);
         $this->currency_symbol = Setting::get('currency_symbol', '$');
         $this->current_logo = Setting::get('company_logo');
+        $this->enable_cash_drawer = Setting::get('enable_cash_drawer', false);
+        $this->cash_drawer_command = Setting::get('cash_drawer_command', '\x1B\x70\x00\x19\xFA');
     }
 
     public function save()
@@ -61,6 +65,8 @@ class Settings extends Component
         Setting::set('ticket_footer', $this->ticket_footer);
         Setting::set('tax_rate', $this->tax_rate);
         Setting::set('currency_symbol', $this->currency_symbol);
+        Setting::set('enable_cash_drawer', $this->enable_cash_drawer ? '1' : '0');
+        Setting::set('cash_drawer_command', $this->cash_drawer_command);
 
         if ($this->logo) {
             $logoPath = $this->logo->store('logos', 'public');

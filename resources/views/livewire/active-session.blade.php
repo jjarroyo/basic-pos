@@ -122,7 +122,7 @@
                class="flex-1 py-4 rounded-xl border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                 Volver
             </a>
-            <a href="{{ route('cash.close') }}" 
+            <a href="{{ route('cash.close', $session->id) }}" 
                class="flex-[2] py-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-lg shadow-lg shadow-red-600/30 transition-all flex items-center justify-center gap-2">
                 <span>Cerrar Esta Caja</span>
                 <span class="material-symbols-outlined">lock</span>

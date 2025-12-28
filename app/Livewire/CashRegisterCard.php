@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\CashRegister;
 use Livewire\Component;
+use Livewire\Attributes\On;
 
 class CashRegisterCard extends Component
 {
@@ -16,6 +17,7 @@ class CashRegisterCard extends Component
         $this->loadData();
     }
 
+    #[On('cash-register-updated')]
     public function loadData()
     {
         $this->cashRegisters = CashRegister::with(['currentSession.user'])

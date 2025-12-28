@@ -43,27 +43,6 @@
                     Perfil
                 </a>
 
-                {{-- Opciones de sincronización (solo en modo cliente) --}}
-                @if(config('pos.mode') === 'client')
-                    <button 
-                        @click="open = false; $dispatch('open-sync-logs')"
-                        class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#253241] transition-colors text-left"
-                    >
-                        <span class="material-symbols-outlined text-[20px]">description</span>
-                        Ver Logs
-                    </button>
-
-                    <button 
-                        @click="open = false; $dispatch('manual-sync')"
-                        class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left"
-                    >
-                        <span class="material-symbols-outlined text-[20px]">sync</span>
-                        Sincronizar Ahora
-                    </button>
-
-                    <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                @endif
-
                  <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left">
@@ -84,11 +63,6 @@
                 </span>
             </button>
         </div>
-
-        {{-- Modal de Logs y Sincronización (solo en modo cliente) --}}
-        @if(config('pos.mode') === 'client')
-            @livewire('sync-logs-modal')
-        @endif
 
         @fluxScripts
     </body>

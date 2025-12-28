@@ -149,7 +149,7 @@
             <!-- Step 3: Cash Register Creation -->
             @if ($currentStep === 3)
                 <div class="space-y-6">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Cajas Registradoras</h2>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Caja Registradora</h2>
                     
                     <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
                         <div class="flex items-start">
@@ -157,11 +157,11 @@
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                             </svg>
                             <div class="flex-1">
-                                <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">Información</h3>
+                                <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">Una Caja por Instalación</h3>
                                 <p class="text-sm text-blue-800 dark:text-blue-400">
-                                    Las cajas se crearán automáticamente como:<br>
-                                    <strong>Caja 1</strong>, <strong>Caja 2</strong>, <strong>Caja 3</strong>, etc.<br>
-                                    <em>Podrás editarlas después desde la gestión de cajas.</em>
+                                    Como el sistema funciona en un solo PC, solo se creará <strong>una caja registradora</strong>.<br>
+                                    Puedes personalizar el nombre de la caja a continuación.<br>
+                                    <em>Podrás editar el nombre después desde la gestión de cajas.</em>
                                 </p>
                             </div>
                         </div>
@@ -169,22 +169,14 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            ¿Cuántas cajas registradoras deseas crear? (1-10)
+                            Nombre de la Caja Registradora <span class="text-red-500">*</span>
                         </label>
-                        <input type="number" wire:model="register_count" min="1" max="10" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                        @error('register_count') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        <input type="text" wire:model="cash_register_name" placeholder="Ej: Caja Principal, Caja 1, etc." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                        @error('cash_register_name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         
-                        @if ($register_count > 0)
-                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                Se crearán {{ $register_count }} caja(s): 
-                                @for ($i = 1; $i <= min($register_count, 3); $i++)
-                                    Caja {{ $i }}{{ $i < min($register_count, 3) ? ', ' : '' }}
-                                @endfor
-                                @if ($register_count > 3)
-                                    ... y {{ $register_count - 3 }} más
-                                @endif
-                            </p>
-                        @endif
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                            Se creará: <strong class="text-gray-900 dark:text-white">{{ $cash_register_name }}</strong>
+                        </p>
                     </div>
                 </div>
             @endif
@@ -271,9 +263,9 @@
 
                         <!-- Cash Registers -->
                         <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Cajas Registradoras</h3>
+                            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Caja Registradora</h3>
                             <p class="text-sm text-gray-700 dark:text-gray-300">
-                                Se crearán <strong>{{ $register_count }}</strong> caja(s) registradora(s).
+                                Se creará: <strong>{{ $cash_register_name }}</strong>
                             </p>
                         </div>
 
