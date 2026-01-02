@@ -30,7 +30,7 @@
                         id="email"
                         name="email" 
                         type="email" 
-                        :value="old('email')"
+                        value="{{ old('email') }}"
                         required 
                         autofocus 
                         autocomplete="email"
@@ -88,7 +88,7 @@
                     id="remember" 
                     name="remember" 
                     type="checkbox" 
-                    :checked="old('remember')"
+                    {{ old('remember') ? 'checked' : '' }}
                     class="size-4 text-blue-600 bg-white dark:bg-[#1A2633] border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500 focus:ring-2"
                 >
                 <label for="remember" class="ml-2 text-sm text-slate-700 dark:text-slate-300">

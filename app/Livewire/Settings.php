@@ -29,6 +29,22 @@ class Settings extends Component
     public $enable_cash_drawer;
     public $cash_drawer_command;
 
+    // Backup Properties
+    public $backup_enabled;
+    public $backup_frequency;
+    public $backup_time;
+    public $backup_storage_type;
+    public $backup_local_path;
+    public $backup_s3_access_key;
+    public $backup_s3_secret_key;
+    public $backup_s3_region;
+    public $backup_s3_bucket;
+    public $backup_s3_endpoint;
+
+    // Email Notification Properties
+    public $email_notifications_enabled;
+    public $email_notifications_recipient;
+
     public function mount()
     {
         $this->company_name = Setting::get('company_name');
@@ -42,8 +58,24 @@ class Settings extends Component
         $this->tax_rate = Setting::get('tax_rate', 19);
         $this->currency_symbol = Setting::get('currency_symbol', '$');
         $this->current_logo = Setting::get('company_logo');
-        $this->enable_cash_drawer = Setting::get('enable_cash_drawer', false);
+        $this->enable_cash_drawer = filter_var(Setting::get('enable_cash_drawer', false), FILTER_VALIDATE_BOOLEAN);
         $this->cash_drawer_command = Setting::get('cash_drawer_command', '\x1B\x70\x00\x19\xFA');
+
+        // Backup Settings initialization
+        $this->backup_enabled = filter_var(Setting::get('backup_enabled', false), FILTER_VALIDATE_BOOLEAN);
+        $this->backup_frequency = Setting::get('backup_frequency', 'startup');
+        $this->backup_time = Setting::get('backup_time', '00:00');
+        $this->backup_storage_type = Setting::get('backup_storage_type', 'local');
+        $this->backup_local_path = Setting::get('backup_local_path', storage_path('app/backups'));
+        $this->backup_s3_access_key = Setting::get('backup_s3_access_key');
+        $this->backup_s3_secret_key = Setting::get('backup_s3_secret_key');
+        $this->backup_s3_region = Setting::get('backup_s3_default_region', 'us-east-1');
+        $this->backup_s3_bucket = Setting::get('backup_s3_bucket');
+        $this->backup_s3_endpoint = Setting::get('backup_s3_endpoint');
+
+        // Email Notification Settings
+        $this->email_notifications_enabled = filter_var(Setting::get('email_notifications_enabled', false), FILTER_VALIDATE_BOOLEAN);
+        $this->email_notifications_recipient = Setting::get('email_notifications_recipient');
     }
 
     public function save()
@@ -53,6 +85,11 @@ class Settings extends Component
             'company_nit' => 'nullable|string|max:50',
             'tax_rate' => 'required|numeric|min:0|max:100',
             'logo' => 'nullable|image|max:2048',
+            'backup_local_path' => 'required_if:backup_storage_type,local',
+            'backup_s3_access_key' => 'required_if:backup_storage_type,s3',
+            'backup_s3_secret_key' => 'required_if:backup_storage_type,s3',
+            'backup_s3_bucket' => 'required_if:backup_storage_type,s3',
+            'email_notifications_recipient' => 'required_if:email_notifications_enabled,true|nullable|email',
         ]);
 
         Setting::set('company_name', $this->company_name);
@@ -68,6 +105,22 @@ class Settings extends Component
         Setting::set('enable_cash_drawer', $this->enable_cash_drawer ? '1' : '0');
         Setting::set('cash_drawer_command', $this->cash_drawer_command);
 
+        // Save Backup Settings
+        Setting::set('backup_enabled', $this->backup_enabled ? '1' : '0');
+        Setting::set('backup_frequency', $this->backup_frequency);
+        Setting::set('backup_time', $this->backup_time);
+        Setting::set('backup_storage_type', $this->backup_storage_type);
+        Setting::set('backup_local_path', $this->backup_local_path);
+        Setting::set('backup_s3_access_key', $this->backup_s3_access_key);
+        Setting::set('backup_s3_secret_key', $this->backup_s3_secret_key);
+        Setting::set('backup_s3_default_region', $this->backup_s3_region);
+        Setting::set('backup_s3_bucket', $this->backup_s3_bucket);
+        Setting::set('backup_s3_endpoint', $this->backup_s3_endpoint);
+
+        // Save Email Notification Settings
+        Setting::set('email_notifications_enabled', $this->email_notifications_enabled ? '1' : '0');
+        Setting::set('email_notifications_recipient', $this->email_notifications_recipient);
+
         if ($this->logo) {
             $logoPath = $this->logo->store('logos', 'public');
             Setting::set('company_logo', $logoPath);
@@ -75,6 +128,37 @@ class Settings extends Component
         }
 
         session()->flash('message', 'Configuración guardada correctamente.');
+    }
+
+    public function testS3Connection()
+    {
+        $this->validate([
+            'backup_s3_access_key' => 'required',
+            'backup_s3_secret_key' => 'required',
+            'backup_s3_bucket' => 'required',
+            'backup_s3_region' => 'required',
+        ]);
+
+        $config = [
+            'driver' => 's3',
+            'key' => $this->backup_s3_access_key,
+            'secret' => $this->backup_s3_secret_key,
+            'region' => $this->backup_s3_region,
+            'bucket' => $this->backup_s3_bucket,
+            'endpoint' => $this->backup_s3_endpoint,
+            'use_path_style_endpoint' => true,
+            'throw' => true,
+        ];
+
+        try {
+            \Illuminate\Support\Facades\Config::set('filesystems.disks.s3_test', $config);
+            Storage::disk('s3_test')->put('test_connection.txt', 'Connection Successful');
+            Storage::disk('s3_test')->delete('test_connection.txt');
+            
+            session()->flash('message', 'Conexión S3 exitosa.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error de conexión S3: ' . $e->getMessage());
+        }
     }
 
     public function createBackup()

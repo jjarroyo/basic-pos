@@ -198,9 +198,135 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="bg-white dark:bg-[#1e293b] rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-700 pb-2">Notificaciones por Email</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-1">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input wire:model.live="email_notifications_enabled" type="checkbox" class="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                                    <div>
+                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Enviar comprobante de venta por email</span>
+                                        <p class="text-xs text-slate-500 mt-1">Cuando está habilitado, se enviará automáticamente un email con el detalle de cada venta confirmada.</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div x-show="$wire.email_notifications_enabled" class="animate-fade-in">
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Email del Destinatario</label>
+                            <input wire:model="email_notifications_recipient" type="email" placeholder="ejemplo@correo.com" class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#0f172a] px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+                            @error('email_notifications_recipient') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            <p class="text-xs text-slate-500 mt-1">Los comprobantes de venta se enviarán a este correo electrónico.</p>
+                        </div>
+
+                        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <p class="text-sm text-blue-700 dark:text-blue-400 flex items-start gap-2">
+                                <span class="material-symbols-outlined text-lg mt-0.5">info</span>
+                                <span>El envío de emails se realiza en segundo plano y no afectará el flujo de ventas.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div x-show="activeTab === 'backup'" class="space-y-6 animate-fade-in" style="display: none;">
+                
+                <!-- Automatic Backup Configuration -->
+                <div class="bg-white dark:bg-[#1e293b] rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-700 pb-2">Configuración de Backups Automáticos</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Enable Toggle -->
+                        <div class="flex items-start gap-4">
+                            <div class="flex-1">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input wire:model.live="backup_enabled" type="checkbox" class="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                                    <div>
+                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Habilitar Copias Automáticas</span>
+                                        <p class="text-xs text-slate-500 mt-1">El sistema realizará copias de seguridad automáticamente según la frecuencia programada.</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div x-show="$wire.backup_enabled" class="space-y-6 animate-fade-in">
+                            <!-- Frequency & Time -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Frecuencia</label>
+                                    <select wire:model.live="backup_frequency" class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#0f172a] px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+                                        <option value="startup">Al Iniciar la Aplicación</option>
+                                        {{-- <option value="daily">Diaria (Requiere App Abierta)</option> --}}
+                                    </select>
+                                </div>
+                                <div x-show="$wire.backup_frequency === 'daily'">
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Hora de Ejecución</label>
+                                    <input wire:model="backup_time" type="time" class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#0f172a] px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+                                </div>
+                            </div>
+
+                            <!-- Storage Type -->
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Ubicación del Backup</label>
+                                <div class="flex gap-4">
+                                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-[#0f172a] p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex-1">
+                                        <input wire:model.live="backup_storage_type" type="radio" value="local" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Local (Carpeta)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-[#0f172a] p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex-1">
+                                        <input wire:model.live="backup_storage_type" type="radio" value="s3" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Remoto (S3 / MinIO)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Local Settings -->
+                            <div x-show="$wire.backup_storage_type === 'local'" class="animate-fade-in">
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Ruta de la Carpeta</label>
+                                <input wire:model="backup_local_path" type="text" placeholder="Ej: C:\Backups" class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#0f172a] px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+                                @error('backup_local_path') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            <!-- S3 Settings -->
+                            <div x-show="$wire.backup_storage_type === 's3'" class="space-y-4 animate-fade-in">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Access Key</label>
+                                        <input wire:model="backup_s3_access_key" type="text" class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#0f172a] px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+                                        @error('backup_s3_access_key') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Secret Key</label>
+                                        <input wire:model="backup_s3_secret_key" type="password" class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#0f172a] px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+                                        @error('backup_s3_secret_key') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Bucket Name</label>
+                                        <input wire:model="backup_s3_bucket" type="text" class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#0f172a] px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+                                        @error('backup_s3_bucket') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Region</label>
+                                        <input wire:model="backup_s3_region" type="text" placeholder="us-east-1" class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#0f172a] px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+                                        @error('backup_s3_region') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Endpoint (Opcional - Para MinIO/DigitalOcean)</label>
+                                        <input wire:model="backup_s3_endpoint" type="text" placeholder="Ej: https://sfo2.digitaloceanspaces.com" class="w-full rounded-xl border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-[#0f172a] px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+                                    </div>
+                                </div>
+                                
+                                <button type="button" wire:click="testS3Connection" class="text-sm font-bold text-blue-600 hover:text-blue-700 underline flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-base">wifi</span>
+                                    Probar Conexión S3
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Database Information -->
                 <div class="bg-white dark:bg-[#1e293b] rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm">
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-700 pb-2">Información de la Base de Datos</h3>

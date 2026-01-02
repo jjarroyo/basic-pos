@@ -44,6 +44,11 @@ class Pos extends Component
     public $discountValue = 0;
     public $discountAmount = 0;
 
+    // Keyboard shortcuts support
+    public $lastProductAdded = null;
+    public $suspendedSales = [];
+    public $showHelpModal = false;
+
     public function mount()
     {
         $activeSession = CashRegisterSession::where('user_id', auth()->id())
@@ -137,13 +142,6 @@ class Pos extends Component
 
                 // Decrement stock
                 $product->decrement('stock', $qty);
-                
-                // Broadcast stock update to all clients in real-time
-                event(new \App\Events\ProductStockUpdated(
-                    $product->id,
-                    $product->fresh()->stock,
-                    auth()->user()->name
-                ));
             }
         });
 
@@ -153,6 +151,32 @@ class Pos extends Component
         if ($sale) {
             $this->dispatch('sale-completed', url: route('print.ticket', $sale));
             session()->flash('message', '¡Venta registrada correctamente!');
+            
+            // Send email notification if enabled
+            try {
+                $emailEnabled = \App\Models\Setting::get('email_notifications_enabled');
+                Log::info("Email notifications enabled: " . $emailEnabled);
+                if ($emailEnabled) {
+                    $phpBinary = PHP_BINARY;
+                    $artisan = base_path('artisan');
+                    
+                    Log::info("About to create Process with: " . $phpBinary . " " . $artisan . " app:send-sale-receipt " . $sale->id);
+                    
+                    $process = new \Symfony\Component\Process\Process([
+                        $phpBinary, 
+                        $artisan, 
+                        'app:send-sale-receipt', 
+                        $sale->id
+                    ]);
+                    
+                    // Run synchronously (email sending is fast, won't block UI)
+                    $process->run();
+                    
+                    Log::info("Process completed for sale email #" . $sale->id . " - Exit code: " . $process->getExitCode());
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to dispatch email for sale #' . $sale->id . ': ' . $e->getMessage());
+            }
         } else {
             session()->flash('error', 'Error al registrar la venta');
         }
@@ -204,6 +228,7 @@ class Pos extends Component
         } else {
             $this->cart[$productId] = 1;
         }
+        $this->lastProductAdded = $productId;
         Log::info('Cart updated: ' . json_encode($this->cart));
     }
 
@@ -366,5 +391,115 @@ class Pos extends Component
         $this->discountType = $this->discountType ?? 'percentage';
         $this->discountValue = $this->discountValue ?? 0;
         $this->showDiscountModal = true;
+    }
+
+    // Keyboard Shortcuts Methods
+    
+    public function increaseLastProduct()
+    {
+        if ($this->lastProductAdded && isset($this->cart[$this->lastProductAdded])) {
+            $product = Product::find($this->lastProductAdded);
+            if ($product && $this->cart[$this->lastProductAdded] < $product->stock) {
+                $this->cart[$this->lastProductAdded]++;
+                $this->dispatch('product-quantity-updated', name: $product->name, quantity: $this->cart[$this->lastProductAdded]);
+            } else {
+                session()->flash('error', 'Stock insuficiente');
+            }
+        }
+    }
+
+    public function decreaseLastProduct()
+    {
+        if ($this->lastProductAdded && isset($this->cart[$this->lastProductAdded])) {
+            if ($this->cart[$this->lastProductAdded] > 1) {
+                $this->cart[$this->lastProductAdded]--;
+                $product = Product::find($this->lastProductAdded);
+                $this->dispatch('product-quantity-updated', name: $product->name, quantity: $this->cart[$this->lastProductAdded]);
+            } else {
+                unset($this->cart[$this->lastProductAdded]);
+                $this->lastProductAdded = null;
+                $this->dispatch('product-removed');
+            }
+        }
+    }
+
+    public function suspendCurrentSale()
+    {
+        if (empty($this->cart)) {
+            session()->flash('error', 'No hay productos en el carrito para suspender');
+            return;
+        }
+
+        $suspended = [
+            'cart' => $this->cart,
+            'clientId' => $this->clientId,
+            'clientName' => $this->clientName,
+            'discountType' => $this->discountType,
+            'discountValue' => $this->discountValue,
+            'discountAmount' => $this->discountAmount,
+            'timestamp' => now()->format('H:i:s'),
+            'total' => $this->total
+        ];
+
+        $this->suspendedSales[] = $suspended;
+        
+        $this->clearCart();
+        
+        session()->flash('message', 'Venta suspendida correctamente. Total: $' . number_format($suspended['total'], 2));
+        $this->dispatch('sale-suspended', count: count($this->suspendedSales));
+    }
+
+    public function loadSuspendedSale($index)
+    {
+        if (!isset($this->suspendedSales[$index])) {
+            return;
+        }
+
+        $suspended = $this->suspendedSales[$index];
+        
+        $this->cart = $suspended['cart'];
+        $this->clientId = $suspended['clientId'];
+        $this->clientName = $suspended['clientName'];
+        $this->discountType = $suspended['discountType'];
+        $this->discountValue = $suspended['discountValue'];
+        $this->discountAmount = $suspended['discountAmount'];
+        
+        unset($this->suspendedSales[$index]);
+        $this->suspendedSales = array_values($this->suspendedSales);
+        
+        session()->flash('message', 'Venta recuperada correctamente');
+        $this->dispatch('sale-loaded');
+    }
+
+    public function deleteSuspendedSale($index)
+    {
+        if (isset($this->suspendedSales[$index])) {
+            unset($this->suspendedSales[$index]);
+            $this->suspendedSales = array_values($this->suspendedSales);
+            session()->flash('message', 'Venta suspendida eliminada');
+        }
+    }
+
+    public function updateProductQuantity($productId, $quantity)
+    {
+        if (!isset($this->cart[$productId])) {
+            return;
+        }
+
+        $product = Product::find($productId);
+        
+        if ($quantity <= 0) {
+            unset($this->cart[$productId]);
+            if ($this->lastProductAdded == $productId) {
+                $this->lastProductAdded = null;
+            }
+            return;
+        }
+
+        if ($product && $quantity <= $product->stock) {
+            $this->cart[$productId] = $quantity;
+        } else {
+            session()->flash('error', 'Stock insuficiente. Disponible: ' . $product->stock);
+        }
     }
 }

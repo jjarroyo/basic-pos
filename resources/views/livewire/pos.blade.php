@@ -19,10 +19,14 @@
                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <span class="material-symbols-outlined text-[20px]">search</span>
                 </div>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <kbd class="hidden sm:inline-block px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-bold text-slate-500 dark:text-slate-400">TAB</kbd>
+                </div>
                 <input 
+                    id="searchInput"
                     wire:model.live.debounce.150ms="search"
                     wire:keydown.enter="searchByBarcode"
-                    class="block w-full rounded-xl border-none bg-slate-100 dark:bg-slate-800 py-2.5 pl-10 pr-3 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white" 
+                    class="block w-full rounded-xl border-none bg-slate-100 dark:bg-slate-800 py-2.5 pl-10 pr-12 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white" 
                     placeholder="Escanear código o buscar producto..." 
                     type="text"
                     autofocus
@@ -73,9 +77,16 @@
                         <button 
                             type="button"
                             wire:click="addToCart({{ $product->id }})" 
-                            class="group flex flex-col bg-white dark:bg-[#1e293b] rounded-2xl shadow-sm hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-200 cursor-pointer overflow-hidden border border-transparent hover:border-orange-500/50 active:scale-95 text-left"
+                            class="group flex flex-col bg-white dark:bg-[#1e293b] rounded-2xl shadow-sm hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-200 cursor-pointer overflow-hidden border {{ isset($cart[$product->id]) ? 'border-orange-500 ring-2 ring-orange-500/20' : 'border-transparent hover:border-orange-500/50' }} active:scale-95 text-left relative"
                         >
                             <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800">
+                                @if(isset($cart[$product->id]))
+                                    <div class="absolute top-2 left-2 z-20 bg-orange-600 text-white text-[12px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-white dark:border-[#1e293b] flex items-center gap-1 animate-in fade-in zoom-in duration-200">
+                                        <span class="material-symbols-outlined text-[14px]">shopping_cart</span>
+                                        {{ $cart[$product->id] }}
+                                    </div>
+                                @endif
+                                
                                 @if($product->image)
                                     <x-image-display :path="$product->image" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                 @else
@@ -83,7 +94,11 @@
                                         <span class="material-symbols-outlined text-4xl">image_not_supported</span>
                                     </div>
                                 @endif
-                                <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full">
+                                <div class="absolute top-2 right-2 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm z-10
+                                    {{ $product->stock <= 5 ? 'bg-red-600 animate-pulse' : ($product->stock <= 10 ? 'bg-amber-500' : 'bg-black/60') }}">
+                                    @if($product->stock <= 5)
+                                        <span class="material-symbols-outlined text-[12px]">warning</span>
+                                    @endif
                                     {{ $product->stock }} un.
                                 </div>
                             </div>
@@ -92,7 +107,7 @@
                                 <h3 class="text-slate-900 dark:text-white text-sm font-bold leading-tight line-clamp-2 h-10">{{ $product->name }}</h3>
                                 <div class="flex items-center justify-between mt-auto">
                                     <p class="text-slate-700 dark:text-gray-300 text-base font-bold">${{ number_format($product->selling_price, 2) }}</p>
-                                    <div class="size-8 rounded-full bg-slate-100 dark:bg-slate-700 group-hover:bg-orange-600 group-hover:text-white text-slate-900 dark:text-white flex items-center justify-center transition-colors">
+                                    <div class="size-8 rounded-full {{ isset($cart[$product->id]) ? 'bg-orange-600 text-white' : 'bg-slate-100 dark:bg-slate-700 group-hover:bg-orange-600 group-hover:text-white' }} text-slate-900 dark:text-white flex items-center justify-center transition-colors">
                                         <span class="material-symbols-outlined text-lg">add</span>
                                     </div>
                                 </div>
@@ -112,9 +127,15 @@
             <div class="flex-none px-6 pt-6 pb-4 bg-white dark:bg-[#1e293b] z-10">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-slate-900 dark:text-white text-2xl font-bold leading-tight">Ticket Actual</h2>
-                    <button wire:click="clearCart" wire:confirm="¿Vaciar todo el carrito?" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Limpiar Carrito">
-                        <span class="material-symbols-outlined">delete_sweep</span>
-                    </button>
+                    <div class="flex gap-2">
+                        <button wire:click="$set('showHelpModal', true)" class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Atajos de Teclado [F12]">
+                            <span class="material-symbols-outlined">keyboard</span>
+                        </button>
+                        <button wire:click="clearCart" wire:confirm="¿Vaciar todo el carrito?" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors relative group" title="Limpiar Carrito [F4]">
+                            <span class="material-symbols-outlined">delete_sweep</span>
+                            <span class="absolute -top-1 -right-1 bg-slate-100 dark:bg-slate-700 text-[9px] font-bold px-1 rounded border border-slate-200 dark:border-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">F4</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Client Selector -->
@@ -133,7 +154,7 @@
                         
                         <button wire:click="$set('showClientModal', true)" 
                                 class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-1 flex-shrink-0"
-                                title="Crear nuevo cliente">
+                                title="Crear nuevo cliente [Ctrl+N]">
                             <span class="material-symbols-outlined text-lg">add</span>
                             <span class="text-xs font-bold">Nuevo</span>
                         </button>
@@ -211,24 +232,27 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     @if(!$discountAmount && !empty($cart))
-                        <button wire:click="openDiscountModal" class="col-span-1 flex items-center justify-center gap-2 h-12 rounded-xl border border-green-300 dark:border-green-700 text-green-700 dark:text-green-400 font-bold text-sm hover:bg-green-50 dark:hover:bg-green-900/20 transition-all">
+                        <button wire:click="openDiscountModal" class="col-span-1 flex items-center justify-center gap-2 h-12 rounded-xl border border-green-300 dark:border-green-700 text-green-700 dark:text-green-400 font-bold text-sm hover:bg-green-50 dark:hover:bg-green-900/20 transition-all relative group">
                             <span class="material-symbols-outlined text-[20px]">sell</span>
                             Descuento
+                            <span class="absolute top-1 right-2 text-[10px] opacity-70 bg-green-100 dark:bg-green-900/50 px-1 py-0.5 rounded">F1</span>
                         </button>
                     @else
-                        <button class="col-span-1 flex items-center justify-center gap-2 h-12 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-gray-300 font-bold text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                        <button wire:click="suspendCurrentSale" wire:confirm="¿Suspender venta actual?" class="col-span-1 flex items-center justify-center gap-2 h-12 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-gray-300 font-bold text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-all relative group">
                             <span class="material-symbols-outlined text-[20px]">pause</span>
                             Suspender
+                            <span class="absolute top-1 right-2 text-[10px] opacity-70 bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded">F3</span>
                         </button>
                     @endif
                     
                     <button 
                         wire:click="openCheckout"
                         @if(empty($cart)) disabled @endif
-                        class="col-span-{{ !$discountAmount && !empty($cart) ? '1' : '2' }} bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl shadow-orange-600/20 transition-all flex items-center justify-center gap-2 px-6 py-4 mt-1 group"
+                        class="col-span-{{ !$discountAmount && !empty($cart) ? '1' : '2' }} bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl shadow-orange-600/20 transition-all flex items-center justify-center gap-2 px-6 py-4 mt-1 group relative"
                     >
                         <span>Pagar</span>
                         <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        <span class="absolute top-2 right-2 text-[10px] opacity-70 bg-orange-700 px-1.5 py-0.5 rounded">F8</span>
                     </button>
                 </div>
             </div>
@@ -473,6 +497,85 @@
     </div>
     @endif
 
+    <!-- Help Modal for Shortcuts -->
+    @if($showHelpModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-[#1e293b] rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-[#0f172a]">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined">keyboard</span>
+                    Atajos de Teclado
+                </h3>
+                <button wire:click="$set('showHelpModal', false)" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto">
+                <div>
+                    <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Navegación</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Pagar / Checkout</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">F8</kbd>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Aplicar Descuento</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">F1</kbd>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Seleccionar Cliente</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">F2</kbd>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Suspender Venta</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">F3</kbd>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Limpiar Carrito</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">F4</kbd>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Ayuda</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">F12</kbd>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Acciones Rápidas</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Buscar Producto</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">TAB</kbd>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Aumentar Cantidad</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">+</kbd>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Disminuir Cantidad</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">-</kbd>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Confirmar / Aceptar</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">Enter</kbd>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <span class="text-slate-700 dark:text-slate-300">Cancelar / Cerrar</span>
+                            <kbd class="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-bold text-slate-700 dark:text-white">Esc</kbd>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 bg-slate-50 dark:bg-[#0f172a] border-t border-slate-200 dark:border-slate-700 text-center">
+                <p class="text-sm text-slate-500">Presiona <kbd class="font-bold">Esc</kbd> para cerrar este panel</p>
+            </div>
+        </div>
+    </div>
+    @endif
+
     @script
     <script>
         let barcode = '';
@@ -480,26 +583,151 @@
         const BARCODE_TIMEOUT = 100;
         const MIN_BARCODE_LENGTH = 3;
 
-        document.addEventListener('keypress', function(e) {
-            if (e.target.tagName === 'BUTTON') {
+        document.addEventListener('keydown', function(e) {
+            // Helpers
+            const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+            const isSearchInput = e.target.id === 'searchInput';
+
+            // Global Shortcuts (Work even in inputs, except some conflicts)
+            
+            // Tab: Focus Search (Global Override unless already in search)
+            if (e.key === 'Tab') {
+                if (!isSearchInput) {
+                    e.preventDefault();
+                    const searchInput = document.getElementById('searchInput');
+                     if (searchInput) {
+                         searchInput.focus();
+                         searchInput.select();
+                    }
+                }
                 return;
             }
-            
-            const target = e.target;
-            const isSearchInput = target.matches('input[wire\\:model*="search"]');
-            const isTextInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
-            
-            if (isSearchInput) {
-                return;
-            }
-            
-            if (isTextInput && !isSearchInput) {
+
+            // F1: Discount Modal
+            if (e.key === 'F1') {
                 e.preventDefault();
+                $wire.call('openDiscountModal');
+                return;
             }
- 
+
+            // F2: Focus Client Selector
+            if (e.key === 'F2') {
+                e.preventDefault();
+                const clientSelect = document.querySelector('select[wire\\:model*="clientId"]');
+                if (clientSelect) clientSelect.focus();
+                return;
+            }
+
+            // F3: Suspend Sale
+            if (e.key === 'F3') {
+                e.preventDefault();
+                if(confirm('¿Suspender venta actual?')) {
+                    $wire.call('suspendCurrentSale');
+                }
+                return;
+            }
+
+            // F4: Clear Cart
+            if (e.key === 'F4') {
+                e.preventDefault();
+                if(confirm('¿Vaciar todo el carrito?')) {
+                    $wire.call('clearCart');
+                }
+                return;
+            }
+
+            // F5: Refresh Products (Prevent browser refresh)
+            if (e.key === 'F5') {
+                e.preventDefault();
+                $wire.$refresh();
+                return;
+            }
+
+            // F8: Checkout
+            if (e.key === 'F8') {
+                e.preventDefault();
+                $wire.call('openCheckout');
+                return;
+            }
+
+            // F12: Help
+            if (e.key === 'F12') {
+                e.preventDefault();
+                $wire.set('showHelpModal', true);
+                return;
+            }
+
+            // Esc: Close Modals
+            if (e.key === 'Escape') {
+                $wire.set('showCheckoutModal', false);
+                $wire.set('showClientModal', false);
+                $wire.set('showDiscountModal', false);
+                $wire.set('showHelpModal', false);
+                // Also blur search if focused
+                if (isSearchInput) e.target.blur();
+                return;
+            }
+
+            // Shortcuts disabled when typing in inputs (except search)
+            if (isInput && !isSearchInput) {
+                // Allow specific navigation in checkout inputs
+                if (e.key === 'Enter') {
+                    // If in cash received input, confirm sale
+                    if (e.target.matches('input[wire\\:model*="cashReceived"]')) {
+                        e.preventDefault();
+                        $wire.call('processSale');
+                    }
+                    // If in discount value input, apply
+                    if (e.target.matches('input[wire\\:model*="discountValue"]')) {
+                         e.preventDefault();
+                        $wire.call('applyDiscount');
+                    }
+                }
+                return;
+            }
+
+            // Actions not allowed in inputs
+            if (!isInput) {
+                // Plus: Increase Last Product
+                if (e.key === '+' || e.key === '=') {
+                    e.preventDefault();
+                    $wire.call('increaseLastProduct');
+                    return;
+                }
+
+                // Minus: Decrease Last Product
+                if (e.key === '-') {
+                    e.preventDefault();
+                    $wire.call('decreaseLastProduct');
+                    return;
+                }
+            }
+
+            // Barcode Scanner Logic (Preserved)
+            if (e.key === 'Enter' && barcode.length > 0) {
+                 clearTimeout(barcodeTimeout);
+                 if (barcode.length >= MIN_BARCODE_LENGTH) {
+                     console.log('Código escaneado (Enter):', barcode);
+                     $wire.set('search', barcode);
+                     // Trigger search
+                     setTimeout(() => {
+                         $wire.call('searchByBarcode');
+                     }, 50);
+                 }
+                 barcode = '';
+                 return;
+            }
+        });
+
+        document.addEventListener('keypress', function(e) {
+            if (e.target.tagName === 'BUTTON') return;
+            const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+            if (isInput && e.target.id !== 'searchInput') return;
+
             clearTimeout(barcodeTimeout);
- 
-            if (e.key && e.key.length === 1) {
+            
+            // Only capture printable characters for barcode
+            if (e.key.length === 1) {
                 barcode += e.key;
             }
             
@@ -507,35 +735,13 @@
                 if (barcode.length >= MIN_BARCODE_LENGTH) {
                     console.log('Código escaneado:', barcode);
                     $wire.set('search', barcode);
-                    const searchInput = document.querySelector('input[wire\\:model*="search"]');
-                    if (searchInput) {
-                        searchInput.focus();
-                        searchInput.select();
-                    }
+                    setTimeout(() => {
+                         $wire.call('searchByBarcode');
+                    }, 50);
                 }
                 barcode = '';
             }, BARCODE_TIMEOUT);
         });
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && barcode.length > 0) {
-                clearTimeout(barcodeTimeout);
-                
-                if (barcode.length >= MIN_BARCODE_LENGTH) {
-                    console.log('Código escaneado (Enter):', barcode);
-                    $wire.set('search', barcode);
-                    
-                    const searchInput = document.querySelector('input[wire\\:model*="search"]');
-                    if (searchInput) {
-                        searchInput.focus();
-                        searchInput.select();
-                    }
-                }
-                
-                barcode = '';
-            }
-        });
-
 
         $wire.on('sale-completed', (event) => { 
             const width = 400;
@@ -561,7 +767,23 @@
         $wire.on('product-no-stock', (event) => {
             showToast('⚠ Sin stock: ' + event.name, 'warning');
         });
- 
+        
+        $wire.on('sale-suspended', (event) => {
+            showToast('⏸ Venta suspendida (' + event.count + ' en espera)', 'warning');
+        });
+
+        $wire.on('sale-loaded', (event) => {
+            showToast('▶ Venta recuperada', 'success');
+        });
+
+        $wire.on('product-quantity-updated', (event) => {
+            showToast('↺ ' + event.name + ': ' + event.quantity + ' un.', 'success');
+        });
+        
+        $wire.on('product-removed', (event) => {
+            showToast('🗑 Producto eliminado', 'warning');
+        });
+
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `fixed top-20 right-6 z-50 px-6 py-3 rounded-xl shadow-lg font-bold text-sm transition-all transform translate-x-0 ${
